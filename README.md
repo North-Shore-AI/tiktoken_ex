@@ -102,6 +102,7 @@ PCRE-compatible translation.
 
 - Run tests: `mix test`
 - Run oracle parity tests (downloads HF artifacts): `mix test --include oracle`
+- Run tests across backends: `scripts/test_backends.sh` (add `--oracle` to include parity)
 - Run dialyzer: `mix dialyzer`
 
 ## License
