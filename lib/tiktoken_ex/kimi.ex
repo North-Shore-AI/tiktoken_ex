@@ -56,12 +56,14 @@ defmodule TiktokenEx.Kimi do
   ## Options
 
     * `:pat_str` - Override the pattern used for splitting.
+    * `:special_token_matching` - Pass-through to `TiktokenEx.Encoding.new/1`.
   """
   @spec from_hf_files(keyword()) :: {:ok, Encoding.t()} | {:error, term()}
   def from_hf_files(opts) when is_list(opts) do
     model_path = Keyword.fetch!(opts, :tiktoken_model_path)
     config_path = Keyword.fetch!(opts, :tokenizer_config_path)
     pat_str = Keyword.get(opts, :pat_str, pat_str())
+    special_token_matching = Keyword.get(opts, :special_token_matching, :parity)
 
     with {:ok, mergeable_ranks} <- load_tiktoken_model(model_path),
          {:ok, config} <- load_json(config_path),
@@ -70,7 +72,8 @@ defmodule TiktokenEx.Kimi do
            Encoding.new(
              pat_str: pat_str,
              mergeable_ranks: mergeable_ranks,
-             special_tokens: special_tokens
+             special_tokens: special_tokens,
+             special_token_matching: special_token_matching
            ) do
       {:ok, encoding}
     end

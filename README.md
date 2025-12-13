@@ -84,6 +84,14 @@ Special tokens are recognized by default. To treat them as plain text:
 {:ok, ids} = TiktokenEx.Encoding.encode(enc, "<|im_end|>", allow_special_tokens: false)
 ```
 
+#### Special token matching
+
+When special tokens overlap (one is a prefix of another), the matching behavior depends on the
+regex alternative order.
+
+- Default: `special_token_matching: :parity` (unspecified order; closer to upstream `tiktoken`).
+- Optional: `special_token_matching: :longest` (deterministic "longest match wins").
+
 ### Regex compatibility note
 
 Kimi’s upstream `pat_str` uses character-class intersections (`&&`), which are

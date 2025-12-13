@@ -83,6 +83,25 @@ defmodule TiktokenEx.KimiTest do
     end)
   end
 
+  test "from_hf_files forwards special_token_matching to Encoding.new" do
+    with_tmp_dir(fn dir ->
+      model_path = Path.join(dir, "tiktoken.model")
+      config_path = Path.join(dir, "tokenizer_config.json")
+
+      File.write!(model_path, "YQ== 0\n")
+      File.write!(config_path, "{}")
+
+      assert {:ok, enc} =
+               Kimi.from_hf_files(
+                 tiktoken_model_path: model_path,
+                 tokenizer_config_path: config_path,
+                 special_token_matching: :longest
+               )
+
+      assert enc.special_token_matching == :longest
+    end)
+  end
+
   defp with_tmp_dir(fun) when is_function(fun, 1) do
     dir = Path.join(System.tmp_dir!(), "tiktoken_ex_#{System.unique_integer([:positive])}")
     File.mkdir_p!(dir)

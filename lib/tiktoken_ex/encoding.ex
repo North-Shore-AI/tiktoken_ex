@@ -1,6 +1,10 @@
 defmodule TiktokenEx.Encoding do
   @moduledoc """
   A TikToken-style encoding: regex-based splitting + byte-pair encoding + specials.
+
+  When special tokens overlap (one is a prefix of another), pass
+  `special_token_matching: :longest` to make matching deterministic. The default
+  `:parity` mode keeps ordering unspecified (closer to upstream `tiktoken`).
   """
 
   @type token_id :: non_neg_integer()
@@ -12,6 +16,7 @@ defmodule TiktokenEx.Encoding do
           decoder: %{required(token_id()) => binary()},
           special_tokens: %{required(String.t()) => token_id()},
           special_tokens_by_id: %{required(token_id()) => String.t()},
+          special_token_matching: :parity | :longest,
           special_regex: Regex.t() | nil
         }
 
@@ -22,6 +27,7 @@ defmodule TiktokenEx.Encoding do
     :decoder,
     :special_tokens,
     :special_tokens_by_id,
+    :special_token_matching,
     :special_regex
   ]
 
@@ -30,13 +36,15 @@ defmodule TiktokenEx.Encoding do
     pat_str = Keyword.fetch!(opts, :pat_str)
     mergeable_ranks = Keyword.fetch!(opts, :mergeable_ranks)
     special_tokens = Keyword.get(opts, :special_tokens, %{})
+    special_token_matching = Keyword.get(opts, :special_token_matching, :parity)
 
     with {:ok, pat_regex} <- compile_pat(pat_str),
          :ok <- validate_mergeable_ranks(mergeable_ranks),
          :ok <- validate_special_tokens(special_tokens),
+         :ok <- validate_special_token_matching(special_token_matching),
          {:ok, decoder} <- invert_bytes_map(mergeable_ranks),
          {:ok, special_tokens_by_id} <- invert_special_tokens(special_tokens),
-         {:ok, special_regex} <- compile_special_regex(special_tokens) do
+         {:ok, special_regex} <- compile_special_regex(special_tokens, special_token_matching) do
       {:ok,
        %__MODULE__{
          pat_str: pat_str,
@@ -45,6 +53,7 @@ defmodule TiktokenEx.Encoding do
          decoder: decoder,
          special_tokens: special_tokens,
          special_tokens_by_id: special_tokens_by_id,
+         special_token_matching: special_token_matching,
          special_regex: special_regex
        }}
     end
@@ -405,15 +414,15 @@ defmodule TiktokenEx.Encoding do
     e in [ArgumentError, Regex.CompileError] -> {:error, {:invalid_pat_str, Exception.message(e)}}
   end
 
-  defp compile_special_regex(special_tokens) when map_size(special_tokens) == 0 do
+  defp compile_special_regex(special_tokens, _matching) when map_size(special_tokens) == 0 do
     {:ok, nil}
   end
 
-  defp compile_special_regex(special_tokens) do
+  defp compile_special_regex(special_tokens, matching) do
     tokens =
       special_tokens
       |> Map.keys()
-      |> Enum.sort_by(fn token -> {-byte_size(token), token} end)
+      |> order_special_tokens(matching)
 
     escaped = Enum.map(tokens, &Regex.escape/1)
 
@@ -421,6 +430,12 @@ defmodule TiktokenEx.Encoding do
   rescue
     e in [ArgumentError, Regex.CompileError] ->
       {:error, {:invalid_special_regex, Exception.message(e)}}
+  end
+
+  defp order_special_tokens(tokens, :parity), do: tokens
+
+  defp order_special_tokens(tokens, :longest) do
+    Enum.sort_by(tokens, fn token -> {-byte_size(token), token} end)
   end
 
   defp validate_mergeable_ranks(ranks) when is_map(ranks) do
@@ -448,6 +463,9 @@ defmodule TiktokenEx.Encoding do
   end
 
   defp validate_special_tokens(_), do: {:error, :invalid_special_tokens}
+
+  defp validate_special_token_matching(matching) when matching in [:parity, :longest], do: :ok
+  defp validate_special_token_matching(_), do: {:error, :invalid_special_token_matching}
 
   defp invert_bytes_map(ranks) when is_map(ranks) do
     decoder =

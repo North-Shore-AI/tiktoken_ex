@@ -44,7 +44,22 @@ defmodule TiktokenEx.EncodingTest do
     assert {:ok, "<|bos|>Hello"} == Encoding.decode(enc, [14, 0, 2])
   end
 
-  test "special token matching prefers the longest match" do
+  test "special token matching prefers the longest match when configured" do
+    mergeable_ranks = %{"b" => 0}
+    special_tokens = %{"<|a|>" => 100, "<|a|>b" => 101}
+
+    {:ok, enc} =
+      Encoding.new(
+        pat_str: ".+",
+        mergeable_ranks: mergeable_ranks,
+        special_tokens: special_tokens,
+        special_token_matching: :longest
+      )
+
+    assert {:ok, [101]} == Encoding.encode(enc, "<|a|>b", allow_special_tokens: true)
+  end
+
+  test "default special token matching is parity (unspecified order)" do
     mergeable_ranks = %{"b" => 0}
     special_tokens = %{"<|a|>" => 100, "<|a|>b" => 101}
 
@@ -55,7 +70,10 @@ defmodule TiktokenEx.EncodingTest do
         special_tokens: special_tokens
       )
 
-    assert {:ok, [101]} == Encoding.encode(enc, "<|a|>b", allow_special_tokens: true)
+    assert enc.special_token_matching == :parity
+
+    assert {:ok, ids} = Encoding.encode(enc, "<|a|>b", allow_special_tokens: true)
+    assert ids in [[101], [100, 0]]
   end
 
   test "new/1 and decode/2 surface invalid input errors" do
