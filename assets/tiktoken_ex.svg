@@ -1,0 +1,156 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="600" height="600">
+  <defs>
+    <linearGradient id="hexEdge" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#17F1D6"/>
+      <stop offset="35%" stop-color="#5B7CFF"/>
+      <stop offset="70%" stop-color="#C44DFF"/>
+      <stop offset="100%" stop-color="#FFB25A"/>
+    </linearGradient>
+
+    <radialGradient id="deepField" cx="50%" cy="45%" r="80%">
+      <stop offset="0%" stop-color="#0C3A4B"/>
+      <stop offset="40%" stop-color="#0C1630"/>
+      <stop offset="75%" stop-color="#12071E"/>
+      <stop offset="100%" stop-color="#070A14"/>
+    </radialGradient>
+
+    <radialGradient id="innerAura" cx="50%" cy="50%" r="68%">
+      <stop offset="0%" stop-color="#17F1D6" stop-opacity="0.35"/>
+      <stop offset="45%" stop-color="#5B7CFF" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#FFB25A" stop-opacity="0.18"/>
+    </radialGradient>
+
+    <linearGradient id="byteGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#9FF0FF"/>
+      <stop offset="60%" stop-color="#17F1D6"/>
+      <stop offset="100%" stop-color="#5B7CFF"/>
+    </linearGradient>
+
+    <linearGradient id="tokenGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFE38A"/>
+      <stop offset="45%" stop-color="#FF9A3C"/>
+      <stop offset="100%" stop-color="#C44DFF"/>
+    </linearGradient>
+
+    <linearGradient id="flowGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#17F1D6" stop-opacity="0.15"/>
+      <stop offset="35%" stop-color="#5B7CFF" stop-opacity="0.85"/>
+      <stop offset="70%" stop-color="#C44DFF" stop-opacity="0.85"/>
+      <stop offset="100%" stop-color="#FFB25A" stop-opacity="0.15"/>
+    </linearGradient>
+
+    <filter id="softGlow">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <filter id="innerShadow">
+      <feOffset dx="0" dy="3"/>
+      <feGaussianBlur stdDeviation="7" result="offset-blur"/>
+      <feComposite in="SourceGraphic" in2="offset-blur" operator="out" result="inverse"/>
+      <feFlood flood-color="#000" flood-opacity="0.45"/>
+      <feComposite in2="inverse" operator="in"/>
+      <feComposite in2="SourceGraphic" operator="over"/>
+    </filter>
+
+    <filter id="lift">
+      <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#17F1D6" flood-opacity="0.18"/>
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000" flood-opacity="0.25"/>
+    </filter>
+
+    <filter id="grain" x="-20%" y="-20%" width="140%" height="140%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="3" stitchTiles="stitch" result="noise"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer>
+        <feFuncA type="table" tableValues="0 0.25"/>
+      </feComponentTransfer>
+    </filter>
+
+    <clipPath id="hexClip">
+      <polygon points="300 30 530 180 530 420 300 570 70 420 70 180"/>
+    </clipPath>
+  </defs>
+
+  <g clip-path="url(#hexClip)">
+    <rect width="600" height="600" fill="url(#deepField)"/>
+    <polygon points="300 30 530 180 530 420 300 570 70 420 70 180" fill="url(#innerAura)"/>
+
+    <rect width="600" height="600" filter="url(#grain)" opacity="0.18"/>
+
+    <!-- Token stream rings -->
+    <g opacity="0.35">
+      <circle cx="300" cy="300" r="195" fill="none" stroke="url(#hexEdge)" stroke-width="3" filter="url(#softGlow)"/>
+      <circle cx="300" cy="300" r="132" fill="none" stroke="#17F1D6" stroke-width="2" stroke-dasharray="7 11" opacity="0.55"/>
+      <circle cx="300" cy="300" r="82" fill="none" stroke="#FFB25A" stroke-width="1.6" stroke-dasharray="4 7" opacity="0.6"/>
+    </g>
+
+    <!-- Flow lines (regex split -> BPE merge -> token ids) -->
+    <g fill="none" stroke-linecap="round" stroke-linejoin="round" filter="url(#softGlow)" opacity="0.95">
+      <path d="M165 265 C220 225 255 235 295 265" stroke="url(#flowGrad)" stroke-width="4"/>
+      <path d="M160 335 C220 375 255 365 295 335" stroke="url(#flowGrad)" stroke-width="4"/>
+      <path d="M305 265 C345 235 385 235 445 265" stroke="url(#flowGrad)" stroke-width="4"/>
+      <path d="M305 335 C345 365 385 365 445 335" stroke="url(#flowGrad)" stroke-width="4"/>
+    </g>
+
+    <!-- Byte blocks (left) -->
+    <g filter="url(#lift)">
+      <g transform="translate(128 242)">
+        <rect x="0" y="0" width="34" height="34" rx="9" fill="url(#byteGrad)" opacity="0.92"/>
+        <rect x="42" y="0" width="34" height="34" rx="9" fill="url(#byteGrad)" opacity="0.82"/>
+        <rect x="84" y="0" width="34" height="34" rx="9" fill="url(#byteGrad)" opacity="0.72"/>
+        <rect x="0" y="42" width="34" height="34" rx="9" fill="url(#byteGrad)" opacity="0.82"/>
+        <rect x="42" y="42" width="34" height="34" rx="9" fill="url(#byteGrad)" opacity="0.72"/>
+        <rect x="84" y="42" width="34" height="34" rx="9" fill="url(#byteGrad)" opacity="0.62"/>
+        <rect x="21" y="84" width="34" height="34" rx="9" fill="url(#byteGrad)" opacity="0.72"/>
+        <rect x="63" y="84" width="34" height="34" rx="9" fill="url(#byteGrad)" opacity="0.62"/>
+      </g>
+    </g>
+
+    <!-- BPE merge core (center) -->
+    <g filter="url(#lift)">
+      <g transform="translate(300 300)">
+        <circle r="62" fill="#0B1022" opacity="0.65"/>
+        <circle r="62" fill="url(#hexEdge)" opacity="0.12"/>
+        <circle r="52" fill="none" stroke="url(#hexEdge)" stroke-width="2.5" opacity="0.7" filter="url(#softGlow)"/>
+
+        <!-- Pair blocks -->
+        <rect x="-42" y="-18" width="38" height="36" rx="12" fill="url(#byteGrad)" opacity="0.92"/>
+        <rect x="4" y="-18" width="38" height="36" rx="12" fill="url(#byteGrad)" opacity="0.78"/>
+
+        <!-- Merge glyph (stylized +) -->
+        <path d="M0 -32 V-22 M0 22 V32 M-32 0 H-22 M22 0 H32"
+              stroke="#FFE38A"
+              stroke-width="4"
+              opacity="0.9"
+              stroke-linecap="round"/>
+
+        <!-- Angle brackets hinting at special tokens -->
+        <path d="M-18 -40 L-34 -28 L-18 -16" stroke="#9FF0FF" stroke-width="3.5" opacity="0.7" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M18 -40 L34 -28 L18 -16" stroke="#9FF0FF" stroke-width="3.5" opacity="0.7" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+    </g>
+
+    <!-- Token ID blocks (right) -->
+    <g filter="url(#lift)">
+      <g transform="translate(396 255)">
+        <rect x="0" y="0" width="152" height="90" rx="26" fill="url(#tokenGrad)" opacity="0.95"/>
+        <rect x="0" y="0" width="152" height="90" rx="26" fill="url(#hexEdge)" opacity="0.12"/>
+        <rect x="12" y="14" width="50" height="24" rx="10" fill="#0B1022" opacity="0.45"/>
+        <rect x="68" y="14" width="72" height="24" rx="10" fill="#0B1022" opacity="0.35"/>
+        <rect x="12" y="52" width="128" height="24" rx="10" fill="#0B1022" opacity="0.35"/>
+        <path d="M24 28 L36 22 L36 34 Z" fill="#17F1D6" opacity="0.85"/>
+        <path d="M128 22 L140 28 L128 34 Z" fill="#FFE38A" opacity="0.85"/>
+      </g>
+    </g>
+  </g>
+
+  <!-- Outer hex frame -->
+  <polygon points="300 30 530 180 530 420 300 570 70 420 70 180"
+           fill="none"
+           stroke="url(#hexEdge)"
+           stroke-width="6"
+           filter="url(#innerShadow)"/>
+</svg>
