@@ -28,7 +28,7 @@ Add `tiktoken_ex` to your dependencies:
 ```elixir
 def deps do
   [
-    {:tiktoken_ex, "~> 0.1.0"}
+    {:tiktoken_ex, "~> 0.2.0"}
   ]
 end
 ```
@@ -75,6 +75,26 @@ alias TiktokenEx.{Encoding, Kimi}
 {:ok, ids} = Encoding.encode(enc, "Say hi")
 {:ok, decoded} = Encoding.decode(enc, ids)
 ```
+
+### Load a Kimi K2 encoding from a HuggingFace repo (cached)
+
+`from_hf_repo/2` downloads and caches `tiktoken.model` and
+`tokenizer_config.json` under your user cache directory.
+
+```elixir
+alias TiktokenEx.{Encoding, Kimi}
+
+{:ok, enc} =
+  Kimi.from_hf_repo(
+    "moonshotai/Kimi-K2-Thinking",
+    revision: "main",
+    encoding_cache: true
+  )
+
+{:ok, ids} = Encoding.encode(enc, "Say hi")
+```
+
+To test without network, inject a `:fetch_fun` (see `TiktokenEx.HuggingFace`).
 
 ### Special tokens
 

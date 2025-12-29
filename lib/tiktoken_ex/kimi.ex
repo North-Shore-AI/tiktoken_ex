@@ -10,7 +10,7 @@ defmodule TiktokenEx.Kimi do
   `TiktokenEx.Encoding` from HuggingFace-style tokenizer configs.
   """
 
-  alias TiktokenEx.Encoding
+  alias TiktokenEx.{Cache, Encoding, HuggingFace}
 
   @num_reserved_special_tokens 256
 
@@ -51,6 +51,49 @@ defmodule TiktokenEx.Kimi do
   end
 
   @doc """
+  Load a Kimi-compatible encoding from a HuggingFace repo.
+
+  ## Options
+
+    * `:revision` - Git revision or tag (default: `"main"`).
+    * `:cache_dir` - Override the HuggingFace cache root.
+    * `:fetch_fun` - Custom fetcher `fun.(repo_id, revision, filename, opts)`.
+    * `:http_timeout_ms` - Timeout for the default HTTP fetcher.
+    * `:encoding_cache` - When true, reuse an ETS cache keyed by repo + revision.
+    * `:pat_str` - Override the pattern used for splitting.
+    * `:special_token_matching` - Pass-through to `TiktokenEx.Encoding.new/1`.
+  """
+  @spec from_hf_repo(String.t(), keyword()) :: {:ok, Encoding.t()} | {:error, term()}
+  def from_hf_repo(repo_id, opts \\ []) when is_binary(repo_id) and is_list(opts) do
+    revision = Keyword.get(opts, :revision, "main")
+    pat_str = Keyword.get(opts, :pat_str, pat_str())
+    special_token_matching = Keyword.get(opts, :special_token_matching, :parity)
+    use_encoding_cache = Keyword.get(opts, :encoding_cache, false)
+
+    hf_opts = Keyword.take(opts, [:cache_dir, :fetch_fun, :http_timeout_ms])
+
+    loader = fn ->
+      with {:ok, model_path} <-
+             HuggingFace.resolve_file(repo_id, revision, "tiktoken.model", hf_opts),
+           {:ok, config_path} <-
+             HuggingFace.resolve_file(repo_id, revision, "tokenizer_config.json", hf_opts) do
+        from_hf_files(
+          tiktoken_model_path: model_path,
+          tokenizer_config_path: config_path,
+          pat_str: pat_str,
+          special_token_matching: special_token_matching
+        )
+      end
+    end
+
+    if use_encoding_cache do
+      Cache.get_or_load({repo_id, revision, pat_str, special_token_matching}, loader)
+    else
+      loader.()
+    end
+  end
+
+  @doc """
   Load a Kimi-compatible encoding from local HuggingFace files.
 
   ## Options
@@ -67,15 +110,13 @@ defmodule TiktokenEx.Kimi do
 
     with {:ok, mergeable_ranks} <- load_tiktoken_model(model_path),
          {:ok, config} <- load_json(config_path),
-         {:ok, special_tokens} <- build_special_tokens(config, map_size(mergeable_ranks)),
-         {:ok, encoding} <-
-           Encoding.new(
-             pat_str: pat_str,
-             mergeable_ranks: mergeable_ranks,
-             special_tokens: special_tokens,
-             special_token_matching: special_token_matching
-           ) do
-      {:ok, encoding}
+         {:ok, special_tokens} <- build_special_tokens(config, map_size(mergeable_ranks)) do
+      Encoding.new(
+        pat_str: pat_str,
+        mergeable_ranks: mergeable_ranks,
+        special_tokens: special_tokens,
+        special_token_matching: special_token_matching
+      )
     end
   end
 

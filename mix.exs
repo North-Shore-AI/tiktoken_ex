@@ -1,7 +1,7 @@
 defmodule TiktokenEx.MixProject do
   use Mix.Project
 
-  @version "0.1.0"
+  @version "0.2.0"
   @source_url "https://github.com/North-Shore-AI/tiktoken_ex"
   @docs_url "https://hexdocs.pm/tiktoken_ex"
 
@@ -20,6 +20,9 @@ defmodule TiktokenEx.MixProject do
       name: "TiktokenEx",
       source_url: @source_url,
       homepage_url: @source_url,
+      dialyzer: [
+        plt_add_apps: [:inets, :ssl, :public_key]
+      ],
       preferred_cli_env: [
         dialyzer: :test
       ]
@@ -29,7 +32,7 @@ defmodule TiktokenEx.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [:logger]
+      extra_applications: [:logger, :inets, :public_key, :ssl]
     ]
   end
 
@@ -37,6 +40,7 @@ defmodule TiktokenEx.MixProject do
   defp deps do
     [
       {:jason, "~> 1.4"},
+      {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.30", only: :dev, runtime: false},
       {:stream_data, "~> 1.1", only: :test}
@@ -72,7 +76,7 @@ defmodule TiktokenEx.MixProject do
         "GitHub" => @source_url,
         "Docs" => @docs_url
       },
-      files: ~w(lib mix.exs README.md LICENSE assets)
+      files: ~w(lib mix.exs README.md CHANGELOG.md LICENSE assets)
     ]
   end
 end

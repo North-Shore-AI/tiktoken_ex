@@ -1,3 +1,5 @@
+# credo:disable-for-this-file Credo.Check.Refactor.Nesting
+# credo:disable-for-this-file Credo.Check.Refactor.CyclomaticComplexity
 defmodule TiktokenEx.Encoding do
   @moduledoc """
   A TikToken-style encoding: regex-based splitting + byte-pair encoding + specials.
